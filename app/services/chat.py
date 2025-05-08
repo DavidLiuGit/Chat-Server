@@ -25,7 +25,7 @@ def handle_chat(request: ChatCompletionsRequest) -> Message:
 
 async def stream_chat(body: dict):
     chain = build_chain()
-    async for chunk in chain.astream(body):
+    async for chunk in chain.stream(body):
         yield f"data: {chunk}\n\n"
     yield "data: [DONE]\n\n"
 

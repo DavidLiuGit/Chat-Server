@@ -5,10 +5,7 @@ from botocore.config import Config
 from mypy_boto3_bedrock_runtime import BedrockRuntimeClient
 from langchain_aws import ChatBedrock
 from langchain_core.language_models import BaseLanguageModel
-
-from dotenv import load_dotenv
-load_dotenv()
-
+ 
 
 def get_language_model() -> BaseLanguageModel:
     """
