@@ -19,9 +19,16 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "pydantic>=2.11,<3.0",
     "chat-chain @ git+https://github.com/DavidLiuGit/Chat-Chain.git",
+
+    "langchain-aws",
+    "boto3",
 ]
 
 [project.optional-dependencies]
+dev = [
+    "boto3-stubs",
+    "mypy-boto3-bedrock-runtime",
+]
 test = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
