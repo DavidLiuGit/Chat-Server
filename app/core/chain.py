@@ -4,16 +4,9 @@
 
 from functools import lru_cache
 
-from langchain_core.runnables import RunnableSerializable
-
 from chat_chain.chain import ChatChain, ChatChainProps
 
 from app.core.llm import *
-
-
-from dotenv import load_dotenv
-
-load_dotenv()
 
 
 @lru_cache
