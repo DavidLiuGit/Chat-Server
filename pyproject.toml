@@ -17,6 +17,7 @@ dependencies = [
     "fastapi>=0.111.0",
     "uvicorn[standard]>=0.29.0",
     "python-dotenv>=1.0.1",
+    "pydantic>=2.11,<3.0",
     "chat-chain @ git+https://github.com/DavidLiuGit/Chat-Chain.git",
 ]
 
