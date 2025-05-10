@@ -1,3 +1,5 @@
+import os
+
 from langchain_core.retrievers import BaseRetriever
 
 from langchain_logseq.loaders.journal_filesystem_loader import LogseqJournalFilesystemLoader
@@ -13,7 +15,8 @@ def build_retriever() -> BaseRetriever:
     Build a `Retriever` to be used to contexualize the chat.
     """
     llm = get_fast_language_model()
-    loader = LogseqJournalFilesystemLoader(".")
+    journal_path = os.environ.get("LOGSEQ_JOURNAL_PATH", "./journals")
+    loader = LogseqJournalFilesystemLoader(journal_path)
     contextualizer = RetrieverContextualizer(
         RetrieverContextualizerProps(
             llm=llm,
