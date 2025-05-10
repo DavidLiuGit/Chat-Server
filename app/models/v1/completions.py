@@ -60,4 +60,4 @@ class ChatCompletionsResponse(BaseModel):
     model: str
     """Should match request model"""
 
-    choices: list[ChatCompletionChoice]
+    choices: list[ChatCompletionsChoice]
