@@ -72,3 +72,8 @@ async def lifespan(app: FastAPI):
     yield
 
     # Shutdown logic, if needed
+    
+
+from dotenv import load_dotenv
+
+load_dotenv()
