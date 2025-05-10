@@ -24,6 +24,7 @@ def build_retriever() -> BaseRetriever:
                 "Given the user_input, and optional chat_history, create an query object based"
                 "on the schema provided, if you believe it is relevant. Do not include anything"
                 "except for the schema, serialized as JSON. Do not answer the question directly"
+                " and do not include any preamble or additional context in your response."
             ),
             output_schema=LogseqJournalLoaderInput,
             enable_chat_history=True,
