@@ -1,9 +1,13 @@
+from logging import getLogger
 from langchain_core.messages import BaseMessage
 
 from chat_chain.chain import ChatChain
 
 from app.core.chain import build_chain
 from app.models.v1.completions import Message, ChatCompletionsRequest
+
+
+logger = getLogger(__name__)
 
 
 def handle_chat(request: ChatCompletionsRequest) -> Message:
@@ -14,10 +18,9 @@ def handle_chat(request: ChatCompletionsRequest) -> Message:
     chain = build_chain()
 
     user_input, chat_history = _structure_messages(request.messages)
-    return Message(
-        role="assistant",
-        content=chain.chat(user_input, chat_history=chat_history),
-    )
+    content = chain.chat(user_input, chat_history=chat_history)
+    logger.info(f"Assistant response: {content}")
+    return Message(role="assistant", content=content)
 
 
 async def stream_chat(body: dict):
