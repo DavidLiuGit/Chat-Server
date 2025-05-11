@@ -34,11 +34,8 @@ async def add_request_id_middleware(request: Request, call_next):
     response = await call_next(request)
     process_time = time() - start_time
     
-    # Add the request ID to the response headers
-    response.headers["X-Request-ID"] = request_id
-    
     # Log the completed request with timing
-    logger.info(f"Request completed: {request.method} {request.url.path} - Took {process_time:.3f}s")
+    logger.info(f"Request completed: {request.method} {request.url.path} - elapsed={process_time:.3f}s")
     
     return response
 

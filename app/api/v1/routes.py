@@ -1,3 +1,4 @@
+from logging import getLogger
 from time import time
 
 from fastapi import APIRouter
@@ -6,7 +7,10 @@ from app.services.chat import handle_chat, stream_chat
 from app.models.v1.completions import ChatCompletionsRequest, ChatCompletionsResponse, ChatCompletionsChoice
 from app.core.logging import get_request_id
 
+
 router = APIRouter()
+
+logger = getLogger(__name__)
 
 
 @router.post(
@@ -17,6 +21,7 @@ async def chat_completions(request: ChatCompletionsRequest):
     request_id = get_request_id()
     
     # generate n ChatCompletionsChoices
+    logger.info(f"Generating {request.n} choices. history_depth={len(request.messages)}")
     choices = [
         ChatCompletionsChoice(
             index=i,
