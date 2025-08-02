@@ -23,7 +23,8 @@ dependencies = [
     "boto3",
 
     "chat-chain>=0.1.0",
-    "langchain-logseq>=0.2.2",
+    "langchain-logseq>=0.2.3",
+    "psycopg[binary]>=3.0",
 ]
 
 [project.optional-dependencies]
