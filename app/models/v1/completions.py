@@ -68,6 +68,12 @@ class ChatCompletionsChoice(BaseModel):
     ) = "stop"
 
 
+class Usage(BaseModel):
+    prompt_tokens: int
+    completion_tokens: int
+    total_tokens: int
+
+
 class ChatCompletionsResponse(BaseModel):
     """
     Response payload for the `v1/chat/completions` endpoint.
@@ -85,3 +91,6 @@ class ChatCompletionsResponse(BaseModel):
     """Should match request model"""
 
     choices: list[ChatCompletionsChoice]
+    
+    usage: Usage | None = None
+    system_fingerprint: str | None = None
