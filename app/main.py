@@ -6,10 +6,13 @@ load_dotenv()
 
 # Import FastAPI and do some setup
 from fastapi import FastAPI, Request
-from app.api.v1.routes import router as api_router
+
+# Routes
+from app.api.v1 import completions_router, models_router
 
 app = FastAPI(title="LangChain RAG Chat Server")
-app.include_router(api_router, prefix="/v1")
+app.include_router(completions_router, prefix="/v1")
+app.include_router(models_router, prefix="/v1")
 
 
 # Set up middleware

@@ -27,7 +27,7 @@ class ChatCompletionsRequest(BaseModel):
     model: str
     """Optional on this server."""
 
-    n: int | None = 1
+    n: int = 1
     """How many chat completion choices to generate for each input message"""
 
     stream: bool | None = False
