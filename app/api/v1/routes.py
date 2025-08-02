@@ -3,6 +3,7 @@ from time import time
 
 from fastapi import APIRouter
 
+from app.api.sse_utils import sse_chunk, create_chunk, sse_done
 from app.services.chat import handle_chat, stream_chat
 from app.models.v1.completions import ChatCompletionsRequest, ChatCompletionsResponse, ChatCompletionsChoice
 from app.core.logging import get_request_id
