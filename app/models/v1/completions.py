@@ -25,13 +25,35 @@ class ChatCompletionsRequest(BaseModel):
     """
 
     model: str
-    """Optional on this server."""
+    """Model ID to use."""
 
     n: int = 1
     """How many chat completion choices to generate for each input message"""
 
     stream: bool | None = False
     """Whether to stream the response or not."""
+
+    def get_log_sanitized_str(self) -> str:
+        """Logging-safe version that shows first 50 chars of content for last 3 messages"""
+        last_messages = []
+        for msg in self.messages[-3:]:
+            content_str = str(msg.content)
+            content_preview = content_str[:50] + ("..." if len(content_str) > 50 else "")
+            last_messages.append(f"{msg.role}:{content_preview}")
+        
+        messages_summary = (
+            last_messages
+            if len(self.messages) <= 3
+            else [f"({len(self.messages)} msgs)"] + last_messages
+        )
+        
+        return (
+            f"ChatCompletionsRequest("
+            f"messages={messages_summary}, "
+            f"model={self.model}, "
+            f"n={self.n}, "
+            f"stream={self.stream})"
+        )
 
 
 class ChatCompletionsChoice(BaseModel):
@@ -41,7 +63,9 @@ class ChatCompletionsChoice(BaseModel):
     message: Message
     """Message content of the choice."""
 
-    finish_reason: Literal["stop", "length", "tool_calls", "content_filter", "function_call", None] | None = "stop"
+    finish_reason: (
+        Literal["stop", "length", "tool_calls", "content_filter", "function_call", None] | None
+    ) = "stop"
 
 
 class ChatCompletionsResponse(BaseModel):

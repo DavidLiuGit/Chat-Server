@@ -20,9 +20,9 @@ logger = getLogger(__name__)
 )
 async def chat_completions(request: ChatCompletionsRequest):
     request_id = get_request_id()
+    logger.info(f"request: {request.get_log_sanitized_str()}")
     
     # generate n ChatCompletionsChoices
-    logger.info(f"Generating {request.n} choices. history_depth={len(request.messages)}")
     choices = [
         ChatCompletionsChoice(
             index=i,
