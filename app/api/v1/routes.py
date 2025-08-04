@@ -47,7 +47,7 @@ async def chat_completions(request: ChatCompletionsRequest):
 
     if request.stream:
         return StreamingResponse(
-            fake_stream(request_id, request.model, message.content), media_type="text/plain"
+            fake_stream(request_id, request.model, message.content), media_type="text/event-stream"
         )
 
     choices = [
