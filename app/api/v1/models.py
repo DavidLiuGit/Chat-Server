@@ -20,7 +20,7 @@ models_router = APIRouter()
 
 
 @models_router.get(
-    "models",
+    "/models",
     response_model=ListModelsResponse,
     response_model_exclude_none=True,
     tags=["Models"],
@@ -34,7 +34,7 @@ def list_models():
 
 
 @models_router.get(
-    "models/{model}",
+    "/models/{model}",
     response_model=Model,
     response_model_exclude_none=True,
     tags=["Models"],
