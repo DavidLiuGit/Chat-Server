@@ -21,6 +21,8 @@ dependencies = [
 
     "langchain-aws",
     "boto3",
+    "boto3-stubs",
+    "mypy-boto3-bedrock-runtime",
 
     "chat-chain>=0.1.0",
     "langchain-logseq>=0.2.3",
@@ -28,10 +30,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = [
-    "boto3-stubs",
-    "mypy-boto3-bedrock-runtime",
-]
+dev = []
 test = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",

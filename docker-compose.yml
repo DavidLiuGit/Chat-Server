@@ -1,9 +1,7 @@
-version: '3.8'
-
 services:
   chat-server:
     build: .
-    container_name: chat-server
+    container_name: chat-server-logseq
     ports:
       - "8765:8765"
     env_file:
@@ -11,7 +9,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
-      - PGVECTOR_DB_URL=postgresql+psycopg://gptsandboxuser:gptsandboxpw@host.docker.internal:5432/gptsandbox
+      - PGVECTOR_HOST=host.docker.internal
     restart: unless-stopped
 
   open-webui:
@@ -19,8 +17,6 @@ services:
     container_name: open-webui
     ports:
       - "3080:8080"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     environment:
       # Disable auth, since this is a test
       - WEBUI_AUTH=False

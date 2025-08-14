@@ -53,9 +53,7 @@ def _build_pgvector_journal_retriever() -> BaseRetriever:
     """
 
     # Database for PGVector retriever
-    db_url = os.getenv("PGVECTOR_DB_URL")
-    if not db_url:
-        raise ValueError("PGVECTOR_DB_URL environment variable is not set")
+    db_url = _get_pgvector_url()
     db_manager = DocumentDatabaseManager(
         database_url=db_url, schema_suffix="logseq", document_classes=[JournalDocument]
     )
@@ -94,3 +92,15 @@ def _build_pgvector_journal_retriever() -> BaseRetriever:
             contextualizer=contextualizer,
             document_service=document_service,
         )
+
+
+def _get_pgvector_url():
+    db_username = os.getenv("PGVECTOR_USERNAME")
+    db_password = os.getenv("PGVECTOR_PASSWORD")
+    db_host = os.getenv("PGVECTOR_HOST", "localhost")
+    db_port = os.getenv("PGVECTOR_PORT", "5432")
+    db = os.getenv("PGVECTOR_DB", "postgres")
+    db_url = f"postgresql+psycopg://{db_username}:{db_password}@{db_host}:{db_port}/{db}"
+    if not db_url:
+        raise ValueError("PGVECTOR_DB_URL environment variable is not set")
+    return db_url
