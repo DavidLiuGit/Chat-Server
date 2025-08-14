@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  chat-server:
+    build: .
+    container_name: chat-server
+    ports:
+      - "8765:8765"
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    ports:
+      - "3080:8080"
+    environment:
+      # Disable auth, since this is a test
+      - WEBUI_AUTH=False
+
+      # Disable default providers, except OpenAI API
+      - ENABLE_OPENAI_API=True
+      - OPENAI_API_BASE_URLS=http://chat-server:8765/v1
+      - OPENAI_API_KEYS="key1"
+      - ENABLE_ANTHROPIC_API=False
+      - ENABLE_OLLAMA_API=False
+
+      # more config
+      - WEBUI_NAME="Local Chat"
+      - DEFAULT_MODELS=""
+      - ENABLE_WEB_SEARCH=False
+      - ENABLE_IMAGE_GENERATION=False
+      - ENABLE_RAG_HYBRID_SEARCH=False
+    volumes:
+      - open-webui:/app/backend/data
+    depends_on:
+      - chat-server
+    restart: unless-stopped
+
+volumes:
+  open-webui:
