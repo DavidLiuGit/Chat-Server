@@ -2,19 +2,15 @@ import os
 
 from langchain_core.retrievers import BaseRetriever
 
-from langchain_logseq.loaders.journal_filesystem_loader import LogseqJournalFilesystemLoader
-from langchain_logseq.loaders.journal_loader_input import LogseqJournalLoaderInput
 from langchain_logseq.retrievers.contextualizer import (
     RetrieverContextualizer,
     RetrieverContextualizerProps,
 )
-from langchain_logseq.retrievers.journal_date_range_retriever import LogseqJournalDateRangeRetriever
 from langchain_logseq.retrievers.pgvector_journal_retriever import PGVectorJournalRetriever
-from langchain_logseq.models.journal_pgvector import JournalDocument
+from langchain_logseq.models.journal_pgvector import JournalDocument, JournalSearchQuery
 from langchain_logseq.uploaders.pgvector.journal_corpus_manager import JournalCorpusManager
 from pgvector_template.db.document_db import DocumentDatabaseManager
 from pgvector_template.service import DocumentService, DocumentServiceConfig
-from pgvector_template.core import SearchQuery  # this should be customized in Langchain Logseq
 
 from app.core.llm import get_fast_language_model, BedrockEmbeddingProvider
 
@@ -74,7 +70,7 @@ def _build_pgvector_journal_retriever() -> BaseRetriever:
                 "on the schema provided, if you believe it is relevant. Do not include anything "
                 "except for the schema, serialized as JSON. Do not answer the question directly"
             ),
-            output_schema=SearchQuery,
+            output_schema=JournalSearchQuery,
             enable_chat_history=True,
         )
     )
