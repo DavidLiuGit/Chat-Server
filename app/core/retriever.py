@@ -7,7 +7,11 @@ from langchain_logseq.retrievers.contextualizer import (
     RetrieverContextualizerProps,
 )
 from langchain_logseq.retrievers.pgvector_journal_retriever import PGVectorJournalRetriever
-from langchain_logseq.models.journal_pgvector import JournalDocument, JournalSearchQuery
+from langchain_logseq.models.journal_pgvector import (
+    JournalDocument,
+    JournalDocumentMetadata,
+    JournalSearchQuery,
+)
 from langchain_logseq.uploaders.pgvector.journal_corpus_manager import JournalCorpusManager
 from pgvector_template.db.document_db import DocumentDatabaseManager
 from pgvector_template.service import DocumentService, DocumentServiceConfig
@@ -20,26 +24,6 @@ def build_retriever() -> BaseRetriever:
     Build a `Retriever` to be used to contexualize the chat.
     """
     return _build_pgvector_journal_retriever()
-    # llm = get_fast_language_model()
-    # journal_path = os.environ.get("LOGSEQ_JOURNAL_PATH", "./journals")
-    # loader = LogseqJournalFilesystemLoader(journal_path)
-    # contextualizer = RetrieverContextualizer(
-    #     RetrieverContextualizerProps(
-    #         llm=llm,
-    #         prompt=(
-    #             "Given the user_input, and optional chat_history, create an query object based"
-    #             "on the schema provided, if you believe it is relevant. Do not include anything"
-    #             "except for the schema, serialized as JSON. Do not answer the question directly"
-    #             " and do not include any preamble or additional context in your response."
-    #         ),
-    #         output_schema=LogseqJournalLoaderInput,
-    #         enable_chat_history=True,
-    #     )
-    # )
-    # return LogseqJournalDateRangeRetriever(
-    #     contextualizer,
-    #     loader,
-    # )
 
 
 def _build_pgvector_journal_retriever() -> BaseRetriever:
@@ -60,7 +44,6 @@ def _build_pgvector_journal_retriever() -> BaseRetriever:
     llm = get_fast_language_model()
     embedding_provider = BedrockEmbeddingProvider()
 
-        
     # set up RetrieverContextualizer
     contextualizer = RetrieverContextualizer(
         RetrieverContextualizerProps(
@@ -74,16 +57,17 @@ def _build_pgvector_journal_retriever() -> BaseRetriever:
             enable_chat_history=True,
         )
     )
-    
+
     with db_manager.get_session() as session:
         # set up DocumentService, which provides the querying client
         doc_service_cfg = DocumentServiceConfig(
             document_cls=JournalDocument,
-            embedding_provider=embedding_provider,
             corpus_manager_cls=JournalCorpusManager,
+            embedding_provider=embedding_provider,
+            document_metadata_cls=JournalDocumentMetadata,
         )
         document_service = DocumentService(session, doc_service_cfg)
-        
+
         return PGVectorJournalRetriever(
             contextualizer=contextualizer,
             document_service=document_service,

@@ -25,12 +25,15 @@ dependencies = [
     "mypy-boto3-bedrock-runtime",
 
     "chat-chain>=0.1.0",
-    "langchain-logseq>=0.3.0",
+    "langchain-logseq>=0.3.1",
     "psycopg[binary]>=3.0",
 ]
 
 [project.optional-dependencies]
-dev = []
+dev = [
+    # use non-release dep like so (change branch-name first):
+    # "langchain-logseq @ git+https://github.com/username/langchain-logseq.git@branch-name",
+]
 test = [
     "pytest>=7.0.0",
     "pytest-cov>=4.0.0",
