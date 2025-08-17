@@ -25,7 +25,7 @@ dependencies = [
     "mypy-boto3-bedrock-runtime",
 
     "chat-chain>=0.1.0",
-    "langchain-logseq>=0.2.6",
+    "langchain-logseq>=0.3.0",
     "psycopg[binary]>=3.0",
 ]
 

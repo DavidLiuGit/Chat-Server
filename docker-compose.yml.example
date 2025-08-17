@@ -11,7 +11,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     environment:
-      - PGVECTOR_DB_URL=postgresql+psycopg://gptsandboxuser:gptsandboxpw@host.docker.internal:5432/gptsandbox
+      - PGVECTOR_HOST=host.docker.internal
     restart: unless-stopped
 
   open-webui:
