@@ -20,4 +20,5 @@ async def proxy_openai_chat_completion(params: CompletionCreateParams):
     TODO: Add logging
     TODO: Add telemetry
     """
+    params["model"] = "bedrock/global.anthropic.claude-sonnet-4-20250514-v1:0"
     return await openai_like_client.chat.completions.create(**params)  # type: ignore[arg-type]
