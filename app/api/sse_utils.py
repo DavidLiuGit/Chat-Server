@@ -28,3 +28,14 @@ def create_chunk(request_id: str, model: str, content: str = "", finish_reason=N
 def sse_done():
     """Return SSE stream terminator."""
     return "data: [DONE]\n\n"
+
+
+async def openai_sse_generator(stream):
+    """Convert OpenAI stream to SSE format with error handling."""
+    try:
+        async for chunk in stream:
+            yield f"data: {chunk.model_dump_json()}\n\n"
+        yield "data: [DONE]\n\n"
+    except Exception as e:
+        error_data = json.dumps({"error": str(e)})
+        yield f"data: {error_data}\n\n"
