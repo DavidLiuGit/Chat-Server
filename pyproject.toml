@@ -13,12 +13,12 @@ authors = [
     {name = "DL", email = "v49t9zpqd@mozmail.com"}
 ]
 dependencies = [
-    "langchain>=0.3,<0.4",
+    "openai>=2.2.0",
+    # "anthropic",
     "fastapi>=0.111.0",
     "uvicorn[standard]>=0.29.0",
     "python-dotenv>=1.0.1",
     "pydantic>=2.11,<3.0",
-    "chat-chain",
 ]
 
 [project.optional-dependencies]
