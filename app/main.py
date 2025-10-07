@@ -9,12 +9,13 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 # Routes
-from app.api.v1 import completions_router, models_router
+from app.api.v1 import completions_router, models_router, openai_router
 
-app = FastAPI(title="LangChain RAG Chat Server")
-app.include_router(completions_router, prefix="/v1")
+app = FastAPI(title="OpenAI-like API Proxy Server")
+# app.include_router(completions_router, prefix="/v1")
 app.include_router(models_router, prefix="/v1")
 app.include_router(models_router)
+app.include_router(openai_router, prefix="/v1")
 
 
 # Allow CORS

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
-
-from app.models.v1.models import Model, ListModelsResponse
+from openai.types import Model
+from openai.pagination import SyncPage
 
 AVAILABLE_MODELS: dict[str, Model] = {
     # example:
@@ -21,29 +21,25 @@ models_router = APIRouter()
 
 @models_router.get(
     "/models",
-    response_model=ListModelsResponse,
     response_model_exclude_none=True,
     tags=["Models"],
 )
-def list_models():
+def list_models() -> SyncPage[Model]:
     """
     Return list of available models.
     Reference: https://platform.openai.com/docs/api-reference/models/list
     """
-    return ListModelsResponse(data=list(AVAILABLE_MODELS.values()))
+    return SyncPage(data=list(AVAILABLE_MODELS.values()), object="list")
 
 
 @models_router.get(
     "/models/{model}",
-    response_model=Model,
     response_model_exclude_none=True,
     tags=["Models"],
 )
-def retrieve_model(model: str):
+def retrieve_model(model: str) -> Model | None:
     """
     Return metadata on the requested model.
     Reference: https://platform.openai.com/docs/api-reference/models/retrieve
     """
-    if model not in AVAILABLE_MODELS:
-        return None
-    return AVAILABLE_MODELS[model]
+    return AVAILABLE_MODELS.get(model)
