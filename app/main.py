@@ -9,10 +9,9 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 # Routes
-from app.api.v1 import completions_router, models_router, openai_router
+from app.api.v1 import models_router, openai_router
 
 app = FastAPI(title="OpenAI-like API Proxy Server")
-# app.include_router(completions_router, prefix="/v1")
 app.include_router(models_router, prefix="/v1")
 app.include_router(models_router)
 app.include_router(openai_router, prefix="/v1")
@@ -57,19 +56,3 @@ async def add_request_id_middleware(request: Request, call_next):
     )
 
     return response
-
-
-# warm up `build_chain()`
-from contextlib import asynccontextmanager
-from app.core.chain import build_chain
-
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Startup logic
-    build_chain()  # ensures chain is built before serving requests
-
-    # Let FastAPI do its thing
-    yield
-
-    # Shutdown logic, if needed
