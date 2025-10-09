@@ -1,12 +1,16 @@
 import asyncio
 from logging import getLogger
 
+from typing import Any
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from openai.lib.streaming.chat import AsyncChatCompletionStreamManager
+from openai import AsyncStream
 from openai.pagination import SyncPage
 from openai.types import Model
-from openai.types.chat import ChatCompletion, CompletionCreateParams
+from openai.types.chat import ChatCompletion, ChatCompletionChunk, CompletionCreateParams
 
 from app.api.sse_utils import openai_sse_generator
 from app.core.config import ProxyConfig
@@ -16,6 +20,7 @@ from app.core.plugin import ProxyPlugin
 from app.models.model import ModelConfig
 from app.plugins.guardrails import GuardrailsPlugin
 from app.plugins.logging import LoggingPlugin
+
 
 logger = getLogger(__name__)
 
@@ -85,7 +90,9 @@ class ChatCompletionServer:
         self.model_manager = ModelManager(models)
         self._app = self._create_app()
 
-    async def process_request(self, params: CompletionCreateParams) -> ChatCompletion:
+    async def process_request(
+        self, params: CompletionCreateParams
+    ) -> ChatCompletion | AsyncChatCompletionStreamManager[Any]:
         """
         Process a chat completion request through the plugin pipeline.
 
@@ -99,7 +106,7 @@ class ChatCompletionServer:
             params: Chat completion parameters
 
         Returns:
-            Chat completion response or AsyncStream for streaming requests
+            ChatCompletion for non-streaming, AsyncStream (stream manager) for streaming
 
         Raises:
             Exception: Any error during processing
@@ -113,14 +120,14 @@ class ChatCompletionServer:
                 params = await plugin.before_request(params)
 
             # Execute request
-            response = await self.handler.execute(params)
+            response = self.handler.execute(params)
 
             # Fire async hooks only for non-streaming responses
-            # Streaming responses are AsyncStream objects, not ChatCompletion
-            if not params.get("stream"):
+            # Streaming returns AsyncStream manager, handled in SSE generator
+            if not params.get("stream") and isinstance(response, ChatCompletion):
                 asyncio.create_task(self._run_async_hooks(params, response))
 
-            return response
+            return await response
 
         except Exception as e:
             # Fire error hooks in background
@@ -184,17 +191,23 @@ class ChatCompletionServer:
         @app.post("/chat/completions", response_model=None)
         async def chat_completions(params: CompletionCreateParams):
             try:
+                response = await self.process_request(params)
+                
                 if params.get("stream"):
-                    response = await self.process_request(params)
+                    assert isinstance(response, AsyncChatCompletionStreamManager)
                     return StreamingResponse(
-                        openai_sse_generator(response),
+                        openai_sse_generator(response, params, self.plugins),
                         media_type="text/event-stream",
                         headers={
                             "Cache-Control": "no-cache",
                             "Connection": "keep-alive",
                         },
                     )
-                return await self.process_request(params)
+                
+                # Log non-streaming response
+                # logger.info(f"Response: {response.model_dump_json(exclude_none=True)[:500]}...")
+                return response
+                
             except Exception as e:
                 logger.error(f"Error in chat_completions: {e}", exc_info=True)
                 raise HTTPException(status_code=500, detail=str(e))

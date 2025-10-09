@@ -22,20 +22,10 @@ class ProxyConfig(BaseSettings):
         validation_alias="OPENAI_API_KEY",
     )
 
-    # Model configuration
-    default_model: str | None = Field(
-        default=None,
-        description="Override model name in all requests. None = use client's model",
-    )
-
     # Server configuration
     host: str = Field(default="0.0.0.0", description="Server bind address")
     port: int = Field(default=8765, description="Server port")
 
     # Feature flags
-    enable_streaming: bool = Field(
-        default=True, description="Support streaming responses"
-    )
-    enable_telemetry: bool = Field(
-        default=False, description="Enable built-in telemetry plugin"
-    )
+    enable_streaming: bool = Field(default=True, description="Support streaming responses")
+    enable_telemetry: bool = Field(default=False, description="Enable built-in telemetry plugin")
