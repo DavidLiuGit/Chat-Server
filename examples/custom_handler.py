@@ -16,7 +16,7 @@ from app import ChatCompletionServer, ProxyHandler
 class ClaudeHandler(ProxyHandler):
     """Example handler for Claude API."""
 
-    async def execute(self, params: CompletionCreateParams) -> ChatCompletion:
+    async def execute_streaming(self, params: CompletionCreateParams) -> ChatCompletion:
         # Implement Claude API integration here
         # from anthropic import AsyncAnthropic
         # client = AsyncAnthropic(api_key="...")
@@ -28,7 +28,7 @@ class ClaudeHandler(ProxyHandler):
 class MultiProviderHandler(ProxyHandler):
     """Example handler that routes to different providers based on model."""
 
-    async def execute(self, params: CompletionCreateParams) -> ChatCompletion:
+    async def execute_streaming(self, params: CompletionCreateParams) -> ChatCompletion:
         model = params.get("model", "")
         
         # Route based on model prefix
