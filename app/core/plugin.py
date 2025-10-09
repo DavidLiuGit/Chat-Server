@@ -1,5 +1,7 @@
 from abc import ABC
+from typing import Any
 from openai.types.chat import ChatCompletion, CompletionCreateParams
+from openai.lib.streaming.chat import ChatCompletionStreamEvent
 
 
 class ProxyPlugin(ABC):
@@ -49,6 +51,25 @@ class ProxyPlugin(ABC):
         Args:
             params: Original request parameters
             response: Chat completion response
+        """
+        pass
+
+    async def after_stream_async(
+        self, params: CompletionCreateParams, response: ChatCompletion, events: list[ChatCompletionStreamEvent]
+    ) -> None:
+        """
+        Asynchronous hook called after streaming response completes.
+        DOES NOT BLOCK - runs in background.
+        
+        Use cases:
+        - Log streaming responses
+        - Send telemetry with full accumulated response
+        - Analytics on streaming data
+        
+        Args:
+            params: Original request parameters
+            response: Final accumulated ChatCompletion
+            events: All stream events received during streaming
         """
         pass
 

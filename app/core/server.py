@@ -1,18 +1,16 @@
 import asyncio
 from logging import getLogger
 
-from typing import Any
+from typing import Any, AsyncIterator
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from openai.lib.streaming.chat import AsyncChatCompletionStreamManager
-from openai import AsyncStream
+from openai.lib.streaming.chat import AsyncChatCompletionStreamManager, ChatCompletionStreamEvent
 from openai.pagination import SyncPage
 from openai.types import Model
-from openai.types.chat import ChatCompletion, ChatCompletionChunk, CompletionCreateParams
+from openai.types.chat import ChatCompletion, CompletionCreateParams
 
-from app.api.sse_utils import openai_sse_generator
 from app.core.config import ProxyConfig
 from app.core.handler import OpenAIProxyHandler, ProxyHandler
 from app.core.model_manager import ModelManager
@@ -144,6 +142,19 @@ class ChatCompletionServer:
             except Exception as e:
                 logger.error(f"Error in async hook: {e}", exc_info=True)
 
+    async def _run_stream_hooks(
+        self,
+        params: CompletionCreateParams,
+        response: ChatCompletion,
+        events: list[ChatCompletionStreamEvent],
+    ) -> None:
+        """Run after_stream_async hooks in background."""
+        for plugin in self.plugins:
+            try:
+                await plugin.after_stream_async(params, response, events)
+            except Exception as e:
+                logger.error(f"Error in stream hook: {e}", exc_info=True)
+
     async def _run_error_hooks(self, params: CompletionCreateParams, error: Exception) -> None:
         """Run on_error_async hooks in background."""
         for plugin in self.plugins:
@@ -151,6 +162,28 @@ class ChatCompletionServer:
                 await plugin.on_error_async(params, error)
             except Exception as e:
                 logger.error(f"Error in error hook: {e}", exc_info=True)
+
+    async def _stream_with_hooks(
+        self, stream_manager: AsyncChatCompletionStreamManager[Any], params: CompletionCreateParams
+    ) -> AsyncIterator[str]:
+        """Stream chunks to client and run post-flight hooks."""
+        events: list[ChatCompletionStreamEvent] = []
+
+        # handle more types?
+        # https://github.com/openai/openai-python/blob/main/examples/parsing_stream.py
+        async with stream_manager as stream:
+            async for event in stream:
+                events.append(event)
+                if event.type == "chunk":
+                    yield f"data: {event.chunk.model_dump_json(exclude_none=True)}\n\n"
+
+            yield "data: [DONE]\n\n"
+            final_completion = await stream.get_final_completion()
+
+        # debugging output
+        # logger.info(f"Stream completed, total_chunks={len(events)}. {final_completion=}")
+        # logger.info(f"Events sample:\n\tidx0: {events[0]}\n\tidx-2: {events[-2]}\n\tidx-1: {events[-1]}")
+        asyncio.create_task(self._run_stream_hooks(params, final_completion, events))
 
     def _create_app(self) -> FastAPI:
         """
@@ -192,22 +225,20 @@ class ChatCompletionServer:
         async def chat_completions(params: CompletionCreateParams):
             try:
                 response = await self.process_request(params)
-                
+
                 if params.get("stream"):
                     assert isinstance(response, AsyncChatCompletionStreamManager)
                     return StreamingResponse(
-                        openai_sse_generator(response, params, self.plugins),
+                        self._stream_with_hooks(response, params),
                         media_type="text/event-stream",
                         headers={
                             "Cache-Control": "no-cache",
                             "Connection": "keep-alive",
                         },
                     )
-                
-                # Log non-streaming response
-                # logger.info(f"Response: {response.model_dump_json(exclude_none=True)[:500]}...")
+
                 return response
-                
+
             except Exception as e:
                 logger.error(f"Error in chat_completions: {e}", exc_info=True)
                 raise HTTPException(status_code=500, detail=str(e))

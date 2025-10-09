@@ -53,7 +53,7 @@ class OpenAIProxyHandler(ProxyHandler):
             # Use .stream() for streaming requests - returns AsyncChatCompletionStreamManager
             stream_params = params.copy()
             stream_params.pop("stream", None)
-            return self.client.chat.completions.stream(**stream_params)
+            return self.client.chat.completions.stream(**stream_params)  # type: ignore[return-value]
         else:
             # Use .create() for non-streaming requests
             return await self.client.chat.completions.create(**params)  # type: ignore[return-value]
