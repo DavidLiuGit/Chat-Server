@@ -2,12 +2,11 @@ from dotenv import load_dotenv
 from fastapi import Request
 from time import time
 
-load_dotenv()
-
 from app import ChatCompletionServer
 from app.models.model import ModelConfig
 from app.core.logging import setup_logging, generate_request_id, set_request_id
 
+load_dotenv()
 logger = setup_logging()
 
 # Initialize server and get FastAPI app

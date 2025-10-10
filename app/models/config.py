@@ -12,11 +12,12 @@ class ProxyConfig(BaseSettings):
     )
 
     upstream_url: str = Field(
-        default="https://api.openai.com/v1", validation_alias="OPENAI_API_URL"
+        default="https://api.openai.com/v1"
+        # default="https://api.openai.com/v1", validation_alias="OPENAI_API_URL"
     )
     """Base URL of the upstream OpenAI-compatible API"""
 
-    upstream_api_key: str = Field(default="", validation_alias="OPENAI_API_KEY")
+    upstream_api_key: str = Field(default="", )#validation_alias="OPENAI_API_KEY")
     """API key for upstream service authentication"""
 
     host: str = "0.0.0.0"
