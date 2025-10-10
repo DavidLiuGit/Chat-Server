@@ -15,6 +15,7 @@ from app.models.config import ProxyConfig
 from app.core.constants import SSE_DATA_PREFIX, SSE_LINE_ENDING, SSE_DONE_MESSAGE, STREAMING_HEADERS
 from app.core.handler import OpenAIProxyHandler, ProxyHandler
 from app.core.model_manager import ModelManager
+from app.core.normalizer import normalize_chat_completion
 from app.models.plugin import ProxyPlugin
 from app.models import create_model_metadata, ModelConfig
 from app.plugins.guardrails import GuardrailsPlugin
@@ -119,14 +120,14 @@ class ChatCompletionServer:
                 params = await plugin.before_request(params)
 
             # Execute request
-            response = self.handler.execute(params)
+            response = await self.handler.execute(params)
 
-            # Fire async hooks only for non-streaming responses
-            # Streaming returns AsyncStream manager, handled in SSE generator
+            # Normalize non-streaming responses
             if not params.get("stream") and isinstance(response, ChatCompletion):
+                response = normalize_chat_completion(response)
                 asyncio.create_task(self._run_after_request_hooks(params, response))
 
-            return await response
+            return response
 
         except Exception as e:
             # Fire error hooks in background
@@ -169,20 +170,27 @@ class ChatCompletionServer:
     ) -> AsyncIterator[str]:
         """Stream chunks to client and run post-flight hooks."""
         events: list[ChatCompletionStreamEvent] = []
+        event_types: dict[str, int] = {}
 
         # handle more types?
         # https://github.com/openai/openai-python/blob/main/examples/parsing_stream.py
         async with stream_manager as stream:
             async for event in stream:
                 events.append(event)
+                event_types[event.type] = event_types.get(event.type, 0) + 1
+                if event.type == "content.delta" or event.type == "refusal.delta":
+                    yield f"{SSE_DATA_PREFIX}{event.delta}{SSE_LINE_ENDING}"
                 if event.type == "chunk":
                     yield f"{SSE_DATA_PREFIX}{event.chunk.model_dump_json(exclude_none=True)}{SSE_LINE_ENDING}"
+                if event.type == "refusal.delta":
+                    yield f"{SSE_DATA_PREFIX}{event.delta}{SSE_LINE_ENDING}"
 
             yield SSE_DONE_MESSAGE
             final_completion = await stream.get_final_completion()
 
         # debugging output
         logger.info(f"Final event: {events[-1]}")
+        logger.info(f"\t{event_types=}")
         asyncio.create_task(self._run_after_stream_hooks(params, final_completion, events))
 
     def _create_app(self) -> FastAPI:

@@ -43,6 +43,7 @@ class OpenAIProxyHandler(ProxyHandler):
         self.client = AsyncOpenAI(
             base_url=config.upstream_url,
             api_key=config.upstream_api_key or "dummy",
+            timeout=10.0,  # in seconds
         )
 
     async def execute(

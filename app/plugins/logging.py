@@ -17,7 +17,7 @@ class LoggingPlugin(ProxyPlugin):
     ) -> CompletionCreateParams:
         model = params.get("model", "unknown")
         stream = params.get("stream", False)
-        logger.info(f"Chat completion request: model={model}, stream={stream}")
+        logger.info(f"Chat completion request: {params=}")
         return params
 
     async def after_stream_async(
