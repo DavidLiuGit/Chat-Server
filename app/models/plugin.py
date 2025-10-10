@@ -40,8 +40,11 @@ class ProxyPlugin(ABC):
         self, params: CompletionCreateParams, response: ChatCompletion
     ) -> None:
         """
-        Asynchronous hook called after response.
+        Asynchronous hook called after non-streaming response.
         DOES NOT BLOCK - runs in background.
+        
+        Default behavior: calls after_stream_async with empty events list.
+        Override this OR after_stream_async, not both (unless intentional).
         
         Use cases:
         - Log responses
@@ -52,7 +55,7 @@ class ProxyPlugin(ABC):
             params: Original request parameters
             response: Chat completion response
         """
-        pass
+        await self.after_stream_async(params, response, [])
 
     async def after_stream_async(
         self, params: CompletionCreateParams, response: ChatCompletion, events: list[ChatCompletionStreamEvent]
@@ -60,6 +63,9 @@ class ProxyPlugin(ABC):
         """
         Asynchronous hook called after streaming response completes.
         DOES NOT BLOCK - runs in background.
+        
+        Default behavior: no-op. Override to handle both streaming and non-streaming
+        (non-streaming calls this with empty events list).
         
         Use cases:
         - Log streaming responses
@@ -69,7 +75,7 @@ class ProxyPlugin(ABC):
         Args:
             params: Original request parameters
             response: Final accumulated ChatCompletion
-            events: All stream events received during streaming
+            events: All stream events received during streaming (empty for non-streaming)
         """
         pass
 

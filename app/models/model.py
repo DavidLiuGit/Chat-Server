@@ -2,7 +2,20 @@ from enum import Enum
 from typing import Callable
 
 from openai.types.chat import CompletionCreateParams
+from openai.types import Model
 from pydantic import BaseModel, Field, ConfigDict
+
+from app.core.constants import MODEL_OBJECT_TYPE, MODEL_CREATED_TIMESTAMP, MODEL_OWNER
+
+
+def create_model_metadata(model_id: str) -> Model:
+    """Create standard model metadata."""
+    return Model(
+        id=model_id,
+        object=MODEL_OBJECT_TYPE,
+        created=MODEL_CREATED_TIMESTAMP,
+        owned_by=MODEL_OWNER,
+    )
 
 
 class SystemPromptBehavior(str, Enum):
@@ -23,19 +36,22 @@ class SystemPromptBehavior(str, Enum):
 class ModelConfig(BaseModel):
     """Configuration for a custom LLM model."""
 
-    id: str = Field(description="Model identifier exposed to API users")
-    upstream_model: str | None = Field(
-        default=None,
-        description="Model name to use when forwarding to upstream. If None, uses id"
-    )
-    system_prompt: str | None = Field(default=None, description="System prompt for this model")
-    system_prompt_behavior: SystemPromptBehavior = Field(
-        default=SystemPromptBehavior.PASSTHROUGH, description="How to handle system prompts"
-    )
-    transform_params: Callable[[CompletionCreateParams], CompletionCreateParams] | None = Field(
-        default=None, description="Optional function to transform request params"
-    )
+    id: str
+    """Model identifier exposed to API users"""
+
+    upstream_model: str | None = None
+    """Model name to use when forwarding to upstream. If None, uses id"""
+
+    system_prompt: str | None = None
+    """System prompt for this model"""
+
+    system_prompt_behavior: SystemPromptBehavior = SystemPromptBehavior.PASSTHROUGH
+    """How to handle system prompts"""
+
+    transform_params: Callable[[CompletionCreateParams], CompletionCreateParams] | None = None
+    """Optional function to transform request params"""
 
     model_config = ConfigDict(
-        arbitrary_types_allowed = True
+        arbitrary_types_allowed=True,
+        use_attribute_docstrings=True,
     )

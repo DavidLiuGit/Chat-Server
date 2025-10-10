@@ -5,7 +5,7 @@ from openai import AsyncOpenAI, AsyncStream
 from openai.types.chat import ChatCompletion, ChatCompletionChunk, CompletionCreateParams
 from openai.lib.streaming.chat import AsyncChatCompletionStreamManager
 
-from app.core.config import ProxyConfig
+from app.models.config import ProxyConfig
 
 
 class ProxyHandler(ABC):

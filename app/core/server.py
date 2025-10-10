@@ -11,11 +11,12 @@ from openai.pagination import SyncPage
 from openai.types import Model
 from openai.types.chat import ChatCompletion, CompletionCreateParams
 
-from app.core.config import ProxyConfig
+from app.models.config import ProxyConfig
+from app.core.constants import SSE_DATA_PREFIX, SSE_LINE_ENDING, SSE_DONE_MESSAGE, STREAMING_HEADERS
 from app.core.handler import OpenAIProxyHandler, ProxyHandler
 from app.core.model_manager import ModelManager
-from app.core.plugin import ProxyPlugin
-from app.models.model import ModelConfig
+from app.models.plugin import ProxyPlugin
+from app.models import create_model_metadata, ModelConfig
 from app.plugins.guardrails import GuardrailsPlugin
 from app.plugins.logging import LoggingPlugin
 
@@ -123,16 +124,16 @@ class ChatCompletionServer:
             # Fire async hooks only for non-streaming responses
             # Streaming returns AsyncStream manager, handled in SSE generator
             if not params.get("stream") and isinstance(response, ChatCompletion):
-                asyncio.create_task(self._run_async_hooks(params, response))
+                asyncio.create_task(self._run_after_request_hooks(params, response))
 
             return await response
 
         except Exception as e:
             # Fire error hooks in background
-            asyncio.create_task(self._run_error_hooks(params, e))
+            asyncio.create_task(self._run_on_error_hooks(params, e))
             raise
 
-    async def _run_async_hooks(
+    async def _run_after_request_hooks(
         self, params: CompletionCreateParams, response: ChatCompletion
     ) -> None:
         """Run after_request_async hooks in background."""
@@ -140,9 +141,9 @@ class ChatCompletionServer:
             try:
                 await plugin.after_request_async(params, response)
             except Exception as e:
-                logger.error(f"Error in async hook: {e}", exc_info=True)
+                logger.exception("Error in async hook")
 
-    async def _run_stream_hooks(
+    async def _run_after_stream_hooks(
         self,
         params: CompletionCreateParams,
         response: ChatCompletion,
@@ -153,15 +154,15 @@ class ChatCompletionServer:
             try:
                 await plugin.after_stream_async(params, response, events)
             except Exception as e:
-                logger.error(f"Error in stream hook: {e}", exc_info=True)
+                logger.exception("Error in stream hook")
 
-    async def _run_error_hooks(self, params: CompletionCreateParams, error: Exception) -> None:
+    async def _run_on_error_hooks(self, params: CompletionCreateParams, error: Exception) -> None:
         """Run on_error_async hooks in background."""
         for plugin in self.plugins:
             try:
                 await plugin.on_error_async(params, error)
             except Exception as e:
-                logger.error(f"Error in error hook: {e}", exc_info=True)
+                logger.exception("Error in error hook")
 
     async def _stream_with_hooks(
         self, stream_manager: AsyncChatCompletionStreamManager[Any], params: CompletionCreateParams
@@ -175,15 +176,14 @@ class ChatCompletionServer:
             async for event in stream:
                 events.append(event)
                 if event.type == "chunk":
-                    yield f"data: {event.chunk.model_dump_json(exclude_none=True)}\n\n"
+                    yield f"{SSE_DATA_PREFIX}{event.chunk.model_dump_json(exclude_none=True)}{SSE_LINE_ENDING}"
 
-            yield "data: [DONE]\n\n"
+            yield SSE_DONE_MESSAGE
             final_completion = await stream.get_final_completion()
 
         # debugging output
-        # logger.info(f"Stream completed, total_chunks={len(events)}. {final_completion=}")
-        # logger.info(f"Events sample:\n\tidx0: {events[0]}\n\tidx-2: {events[-2]}\n\tidx-1: {events[-1]}")
-        asyncio.create_task(self._run_stream_hooks(params, final_completion, events))
+        logger.info(f"Final event: {events[-1]}")
+        asyncio.create_task(self._run_after_stream_hooks(params, final_completion, events))
 
     def _create_app(self) -> FastAPI:
         """
@@ -231,29 +231,20 @@ class ChatCompletionServer:
                     return StreamingResponse(
                         self._stream_with_hooks(response, params),
                         media_type="text/event-stream",
-                        headers={
-                            "Cache-Control": "no-cache",
-                            "Connection": "keep-alive",
-                        },
+                        headers=STREAMING_HEADERS,
                     )
 
                 return response
 
             except Exception as e:
-                logger.error(f"Error in chat_completions: {e}", exc_info=True)
+                logger.exception("Error in chat_completions")
                 raise HTTPException(status_code=500, detail=str(e))
 
         @app.get("/v1/models", response_model_exclude_none=True)
         @app.get("/models", response_model_exclude_none=True)
         def list_models() -> SyncPage[Model]:
             models = [
-                Model(
-                    id=model_id,
-                    object="model",
-                    created=1677610602,
-                    owned_by="custom",
-                )
-                for model_id in self.model_manager.models.keys()
+                create_model_metadata(model_id) for model_id in self.model_manager.models.keys()
             ]
             return SyncPage(data=models, object="list")
 
@@ -261,12 +252,7 @@ class ChatCompletionServer:
         @app.get("/models/{model}", response_model_exclude_none=True)
         def retrieve_model(model: str) -> Model | None:
             if model in self.model_manager.models:
-                return Model(
-                    id=model,
-                    object="model",
-                    created=1677610602,
-                    owned_by="custom",
-                )
+                return create_model_metadata(model)
             return None
 
         return app

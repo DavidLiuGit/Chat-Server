@@ -49,10 +49,11 @@ class GuardrailsPlugin(ProxyPlugin):
 class TelemetryPlugin(ProxyPlugin):
     """Plugin for metrics collection (asynchronous)."""
 
-    async def after_request_async(
-        self, params: CompletionCreateParams, response: ChatCompletion
+    async def after_stream_async(
+        self, params: CompletionCreateParams, response: ChatCompletion, events: list[ChatCompletionStreamEvent]
     ) -> None:
         # Asynchronous - does not block response
+        # Handles both streaming (events populated) and non-streaming (events empty)
         # metrics.increment("requests.total")
         # if response.usage:
         #     metrics.gauge("tokens.total", response.usage.total_tokens)

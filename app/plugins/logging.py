@@ -4,7 +4,7 @@ from typing import Any
 from openai.types.chat import ChatCompletion, CompletionCreateParams
 from openai.lib.streaming.chat import ChatCompletionStreamEvent
 
-from app.core.plugin import ProxyPlugin
+from app.models.plugin import ProxyPlugin
 
 logger = getLogger(__name__)
 
@@ -20,20 +20,15 @@ class LoggingPlugin(ProxyPlugin):
         logger.info(f"Chat completion request: model={model}, stream={stream}")
         return params
 
-    async def after_request_async(
-        self, params: CompletionCreateParams, response: ChatCompletion
-    ) -> None:
-        model = response.model
-        usage = response.usage
-        logger.info(f"Chat completion response: model={model}, usage={usage}")
-
     async def after_stream_async(
         self, params: CompletionCreateParams, response: ChatCompletion, events: list[ChatCompletionStreamEvent]
     ) -> None:
         model = response.model
         usage = response.usage
-        event_count = len(events)
-        logger.info(f"Chat completion stream: model={model}, usage={usage}, events={event_count}")
+        if events:
+            logger.info(f"Chat completion stream: model={model}, usage={usage}, events={len(events)}")
+        else:
+            logger.info(f"Chat completion response: model={model}, usage={usage}")
 
     async def on_error_async(
         self, params: CompletionCreateParams, error: Exception

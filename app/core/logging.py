@@ -6,6 +6,7 @@ from typing import Optional
 
 # Context variable to store request ID
 request_id_ctx_var: ContextVar[Optional[str]] = ContextVar("request_id", default=None)
+UNKNOWN_REQUEST_ID = "UNKNOWN_REQUEST_ID"
 
 
 class RequestIdFilter(logging.Filter):
@@ -58,7 +59,7 @@ def get_request_id() -> str:
     """
     Get the current request ID from context or return None.
     """
-    return request_id_ctx_var.get()
+    return request_id_ctx_var.get() or UNKNOWN_REQUEST_ID
 
 
 def set_request_id(request_id: str) -> None:

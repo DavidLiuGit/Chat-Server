@@ -2,7 +2,7 @@ from logging import getLogger
 
 from openai.types.chat import CompletionCreateParams
 
-from app.core.plugin import ProxyPlugin
+from app.models.plugin import ProxyPlugin
 
 logger = getLogger(__name__)
 

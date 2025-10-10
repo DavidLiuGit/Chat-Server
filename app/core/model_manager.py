@@ -1,5 +1,6 @@
 from openai.types.chat import CompletionCreateParams
 
+from app.core.constants import ROLE_SYSTEM
 from app.models.model import ModelConfig, SystemPromptBehavior
 
 
@@ -47,7 +48,7 @@ class ModelManager:
 
         # Find existing system message
         system_idx = next(
-            (i for i, m in enumerate(messages) if m.get("role") == "system"), None
+            (i for i, m in enumerate(messages) if m.get("role") == ROLE_SYSTEM), None
         )
 
         behavior = model.system_prompt_behavior
@@ -59,25 +60,25 @@ class ModelManager:
             if system_idx is not None:
                 messages[system_idx]["content"] = model.system_prompt
             else:
-                messages.insert(0, {"role": "system", "content": model.system_prompt})
+                messages.insert(0, {"role": ROLE_SYSTEM, "content": model.system_prompt})
 
         elif behavior == SystemPromptBehavior.PREPEND:
             if system_idx is not None:
                 existing = messages[system_idx]["content"]
                 messages[system_idx]["content"] = f"{model.system_prompt}\n\n{existing}"
             else:
-                messages.insert(0, {"role": "system", "content": model.system_prompt})
+                messages.insert(0, {"role": ROLE_SYSTEM, "content": model.system_prompt})
 
         elif behavior == SystemPromptBehavior.APPEND:
             if system_idx is not None:
                 existing = messages[system_idx]["content"]
                 messages[system_idx]["content"] = f"{existing}\n\n{model.system_prompt}"
             else:
-                messages.insert(0, {"role": "system", "content": model.system_prompt})
+                messages.insert(0, {"role": ROLE_SYSTEM, "content": model.system_prompt})
 
         elif behavior == SystemPromptBehavior.DEFAULT:
             if system_idx is None:
-                messages.insert(0, {"role": "system", "content": model.system_prompt})
+                messages.insert(0, {"role": ROLE_SYSTEM, "content": model.system_prompt})
 
         params["messages"] = messages
         return params
