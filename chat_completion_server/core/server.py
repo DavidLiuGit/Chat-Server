@@ -1,9 +1,10 @@
 import asyncio
 from logging import getLogger
+from time import time
 
 from typing import Any, AsyncIterator
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from openai.lib.streaming.chat import AsyncChatCompletionStreamManager, ChatCompletionStreamEvent
@@ -12,8 +13,14 @@ from openai.types import Model
 from openai.types.chat import ChatCompletion, CompletionCreateParams
 
 from chat_completion_server.models.config import ProxyConfig
-from chat_completion_server.core.constants import SSE_DATA_PREFIX, SSE_LINE_ENDING, SSE_DONE_MESSAGE, STREAMING_HEADERS
+from chat_completion_server.core.constants import (
+    SSE_DATA_PREFIX,
+    SSE_LINE_ENDING,
+    SSE_DONE_MESSAGE,
+    STREAMING_HEADERS,
+)
 from chat_completion_server.core.handler import OpenAIProxyHandler, ProxyHandler
+from chat_completion_server.core.logging import generate_request_id, set_request_id
 from chat_completion_server.core.model_manager import ModelManager
 from chat_completion_server.core.normalizer import normalize_chat_completion
 from chat_completion_server.models.plugin import ProxyPlugin
@@ -226,6 +233,24 @@ class ChatCompletionServer:
             allow_methods=["*"],
             allow_headers=["*"],
         )
+
+        # Add request ID middleware
+        @app.middleware("http")
+        async def add_request_id_middleware(request: Request, call_next):
+            request_id = generate_request_id()
+            set_request_id(request_id)
+
+            logger.info(f"Request started: {request.method} {request.url.path}")
+
+            start_time = time()
+            response = await call_next(request)
+            process_time = time() - start_time
+
+            logger.info(
+                f"Request completed: {request.method} {request.url.path} - elapsed={process_time:.3f}s"
+            )
+
+            return response
 
         # Register routes inline
         @app.post("/v1/chat/completions", response_model=None)

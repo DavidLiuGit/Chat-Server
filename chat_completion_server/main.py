@@ -1,10 +1,8 @@
 from dotenv import load_dotenv
-from fastapi import Request
-from time import time
 
 from chat_completion_server import ChatCompletionServer
 from chat_completion_server.models.model import ModelConfig
-from chat_completion_server.core.logging import setup_logging, generate_request_id, set_request_id
+from chat_completion_server.core.logging import setup_logging
 
 load_dotenv()
 logger = setup_logging()
@@ -16,21 +14,3 @@ custom_model: ModelConfig = ModelConfig(
 )
 server = ChatCompletionServer(models={"custom-model": custom_model})
 app = server.app
-
-
-@app.middleware("http")
-async def add_request_id_middleware(request: Request, call_next):
-    request_id = generate_request_id()
-    set_request_id(request_id)
-    
-    logger.info(f"Request started: {request.method} {request.url.path}")
-    
-    start_time = time()
-    response = await call_next(request)
-    process_time = time() - start_time
-    
-    logger.info(
-        f"Request completed: {request.method} {request.url.path} - elapsed={process_time:.3f}s"
-    )
-    
-    return response
