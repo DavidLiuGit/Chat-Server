@@ -11,15 +11,15 @@ from openai.pagination import SyncPage
 from openai.types import Model
 from openai.types.chat import ChatCompletion, CompletionCreateParams
 
-from app.models.config import ProxyConfig
-from app.core.constants import SSE_DATA_PREFIX, SSE_LINE_ENDING, SSE_DONE_MESSAGE, STREAMING_HEADERS
-from app.core.handler import OpenAIProxyHandler, ProxyHandler
-from app.core.model_manager import ModelManager
-from app.core.normalizer import normalize_chat_completion
-from app.models.plugin import ProxyPlugin
-from app.models import create_model_metadata, ModelConfig
-from app.plugins.guardrails import GuardrailsPlugin
-from app.plugins.logging import LoggingPlugin
+from chat_completion_server.models.config import ProxyConfig
+from chat_completion_server.core.constants import SSE_DATA_PREFIX, SSE_LINE_ENDING, SSE_DONE_MESSAGE, STREAMING_HEADERS
+from chat_completion_server.core.handler import OpenAIProxyHandler, ProxyHandler
+from chat_completion_server.core.model_manager import ModelManager
+from chat_completion_server.core.normalizer import normalize_chat_completion
+from chat_completion_server.models.plugin import ProxyPlugin
+from chat_completion_server.models import create_model_metadata, ModelConfig
+from chat_completion_server.plugins.guardrails import GuardrailsPlugin
+from chat_completion_server.plugins.logging import LoggingPlugin
 
 
 logger = getLogger(__name__)

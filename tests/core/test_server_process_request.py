@@ -4,7 +4,7 @@ from openai.types.chat import ChatCompletion, ChatCompletionMessage
 from openai.types.chat.chat_completion import Choice
 from openai.lib.streaming.chat import AsyncChatCompletionStreamManager
 
-from app.core.server import ChatCompletionServer
+from chat_completion_server.core.server import ChatCompletionServer
 
 
 @pytest.fixture
@@ -49,7 +49,7 @@ async def test_run_after_request_hooks():
 
 
 @pytest.mark.asyncio
-@patch("app.core.server.logger")
+@patch("chat_completion_server.core.server.logger")
 async def test_run_after_request_hooks_with_error(mock_logger):
     """Test _run_after_request_hooks handles plugin errors."""
     plugin = Mock()
@@ -95,7 +95,7 @@ async def test_run_on_error_hooks():
 
 # process_request tests
 @pytest.mark.asyncio
-@patch("app.core.server.normalize_chat_completion")
+@patch("chat_completion_server.core.server.normalize_chat_completion")
 async def test_process_request_non_streaming(mock_normalize, server, mock_response):
     """Test process_request for non-streaming response."""
     mock_normalize.return_value = mock_response

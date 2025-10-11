@@ -4,7 +4,7 @@ from openai.types.chat import ChatCompletion, ChatCompletionMessage
 from openai.types.chat.chat_completion import Choice
 from openai.types import CompletionUsage
 
-from app.core.normalizer import normalize_chat_completion
+from chat_completion_server.core.normalizer import normalize_chat_completion
 
 
 class TestChatCompletionMessage(ChatCompletionMessage):

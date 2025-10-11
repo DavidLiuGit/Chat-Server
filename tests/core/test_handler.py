@@ -4,8 +4,8 @@ from openai.types.chat import ChatCompletion, ChatCompletionMessage
 from openai.types.chat.chat_completion import Choice
 from openai.types.completion_usage import CompletionUsage
 
-from app.core.handler import OpenAIProxyHandler
-from app.models.config import ProxyConfig
+from chat_completion_server.core.handler import OpenAIProxyHandler
+from chat_completion_server.models.config import ProxyConfig
 
 
 @pytest.fixture

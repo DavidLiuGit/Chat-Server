@@ -1,7 +1,7 @@
 from openai.types.chat import CompletionCreateParams
 
-from app.core.constants import ROLE_SYSTEM
-from app.models.model import ModelConfig, SystemPromptBehavior
+from chat_completion_server.core.constants import ROLE_SYSTEM
+from chat_completion_server.models.model import ModelConfig, SystemPromptBehavior
 
 
 class ModelManager:

@@ -3,8 +3,8 @@ requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "Chat-Completion-Server"
-version = "0.2.1"
+name = "chat-completion-server"
+version = "0.2.2"
 description = "A chat server built with FastAPI"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -38,7 +38,7 @@ dist = [
 ]
 
 [tool.setuptools]
-packages = ["app"]
+packages = ["chat_completion_server"]
 
 [tool.black]
 line-length = 100

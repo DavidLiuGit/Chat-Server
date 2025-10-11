@@ -5,7 +5,7 @@ from openai.types.chat.chat_completion import Choice
 from openai.types import CompletionUsage
 from openai.lib.streaming.chat import ChatCompletionStreamEvent
 
-from app.plugins.logging import LoggingPlugin
+from chat_completion_server.plugins.logging import LoggingPlugin
 
 pytestmark = pytest.mark.asyncio
 
@@ -38,7 +38,7 @@ def response():
     )
 
 
-@patch("app.plugins.logging.logger")
+@patch("chat_completion_server.plugins.logging.logger")
 async def test_before_request_logs_params(mock_logger, plugin, params):
     result = await plugin.before_request(params)
 
@@ -47,7 +47,7 @@ async def test_before_request_logs_params(mock_logger, plugin, params):
     assert result == params
 
 
-@patch("app.plugins.logging.logger")
+@patch("chat_completion_server.plugins.logging.logger")
 async def test_after_stream_async_with_events(mock_logger, plugin, params, response):
     events = [Mock(spec=ChatCompletionStreamEvent)]
 
@@ -59,7 +59,7 @@ async def test_after_stream_async_with_events(mock_logger, plugin, params, respo
     assert "events=1" in log_msg
 
 
-@patch("app.plugins.logging.logger")
+@patch("chat_completion_server.plugins.logging.logger")
 async def test_after_stream_async_without_events(mock_logger, plugin, params, response):
     await plugin.after_stream_async(params, response, [])
 
@@ -68,7 +68,7 @@ async def test_after_stream_async_without_events(mock_logger, plugin, params, re
     assert "Chat completion response" in log_msg
 
 
-@patch("app.plugins.logging.logger")
+@patch("chat_completion_server.plugins.logging.logger")
 async def test_on_error_async_logs_error(mock_logger, plugin, params):
     error = Exception("test error")
 
@@ -77,7 +77,7 @@ async def test_on_error_async_logs_error(mock_logger, plugin, params):
     mock_logger.error.assert_called_once_with("Chat completion error: test error", exc_info=True)
 
 
-@patch("app.plugins.logging.logger")
+@patch("chat_completion_server.plugins.logging.logger")
 async def test_before_request_missing_model(mock_logger, plugin):
     params = {"messages": [{"role": "user", "content": "test"}]}
 
@@ -87,7 +87,7 @@ async def test_before_request_missing_model(mock_logger, plugin):
     assert result == params
 
 
-@patch("app.plugins.logging.logger")
+@patch("chat_completion_server.plugins.logging.logger")
 async def test_after_stream_async_no_usage(mock_logger, plugin, params):
     response = ChatCompletion(
         id="test-id",

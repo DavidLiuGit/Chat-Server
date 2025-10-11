@@ -4,7 +4,7 @@ from typing import Any
 from openai.types.chat import ChatCompletion, CompletionCreateParams
 from openai.lib.streaming.chat import ChatCompletionStreamEvent
 
-from app.models.plugin import ProxyPlugin
+from chat_completion_server.models.plugin import ProxyPlugin
 
 logger = getLogger(__name__)
 

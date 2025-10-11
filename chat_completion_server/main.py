@@ -2,9 +2,9 @@ from dotenv import load_dotenv
 from fastapi import Request
 from time import time
 
-from app import ChatCompletionServer
-from app.models.model import ModelConfig
-from app.core.logging import setup_logging, generate_request_id, set_request_id
+from chat_completion_server import ChatCompletionServer
+from chat_completion_server.models.model import ModelConfig
+from chat_completion_server.core.logging import setup_logging, generate_request_id, set_request_id
 
 load_dotenv()
 logger = setup_logging()

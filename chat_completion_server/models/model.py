@@ -5,7 +5,7 @@ from openai.types.chat import CompletionCreateParams
 from openai.types import Model
 from pydantic import BaseModel, Field, ConfigDict
 
-from app.core.constants import MODEL_OBJECT_TYPE, MODEL_CREATED_TIMESTAMP, MODEL_OWNER
+from chat_completion_server.core.constants import MODEL_OBJECT_TYPE, MODEL_CREATED_TIMESTAMP, MODEL_OWNER
 
 
 def create_model_metadata(model_id: str) -> Model:

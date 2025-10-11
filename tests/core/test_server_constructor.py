@@ -1,11 +1,11 @@
 import pytest
 from unittest.mock import Mock
-from app.core.server import ChatCompletionServer
-from app.models.config import ProxyConfig
-from app.models.model import ModelConfig
-from app.core.handler import OpenAIProxyHandler
-from app.plugins.guardrails import GuardrailsPlugin
-from app.plugins.logging import LoggingPlugin
+from chat_completion_server.core.server import ChatCompletionServer
+from chat_completion_server.models.config import ProxyConfig
+from chat_completion_server.models.model import ModelConfig
+from chat_completion_server.core.handler import OpenAIProxyHandler
+from chat_completion_server.plugins.guardrails import GuardrailsPlugin
+from chat_completion_server.plugins.logging import LoggingPlugin
 
 
 def test_constructor_defaults():

@@ -1,6 +1,6 @@
 import pytest
-from app.core.model_manager import ModelManager
-from app.models.model import ModelConfig, SystemPromptBehavior
+from chat_completion_server.core.model_manager import ModelManager
+from chat_completion_server.models.model import ModelConfig, SystemPromptBehavior
 
 
 @pytest.fixture
