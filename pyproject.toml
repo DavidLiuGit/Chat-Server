@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "chat-completion-server"
-version = "0.2.2"
+version = "0.2.3"
 description = "A chat server built with FastAPI"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -37,8 +37,10 @@ dist = [
     "twine>=6.1.0",
 ]
 
-[tool.setuptools]
-packages = ["chat_completion_server"]
+
+[tool.setuptools.packages.find]
+where = ["."]  # Look for packages in the root directory
+include = ["chat_completion_server*"]  # Include all packages starting with langchain_logseq
 
 [tool.black]
 line-length = 100

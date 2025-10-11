@@ -225,7 +225,7 @@ class ChatCompletionServer:
         """
         app = FastAPI(title="Chat Completion Proxy Server")
 
-        # Add CORS middleware
+        # Add CORS middleware, and header configs
         app.add_middleware(
             CORSMiddleware,
             allow_origins=["*"],
@@ -234,12 +234,10 @@ class ChatCompletionServer:
             allow_headers=["*"],
         )
 
-        # Add request ID middleware
         @app.middleware("http")
         async def add_request_id_middleware(request: Request, call_next):
             request_id = generate_request_id()
             set_request_id(request_id)
-
             logger.info(f"Request started: {request.method} {request.url.path}")
 
             start_time = time()
@@ -256,6 +254,9 @@ class ChatCompletionServer:
         @app.post("/v1/chat/completions", response_model=None)
         @app.post("/chat/completions", response_model=None)
         async def chat_completions(params: CompletionCreateParams):
+            """
+            OpenAI `/chat/completions` compatible endpoint.
+            """
             try:
                 response = await self.process_request(params)
 
@@ -276,6 +277,7 @@ class ChatCompletionServer:
         @app.get("/v1/models", response_model_exclude_none=True)
         @app.get("/models", response_model_exclude_none=True)
         def list_models() -> SyncPage[Model]:
+            """Return a list of all registered `Model`s."""
             models = [
                 create_model_metadata(model_id) for model_id in self.model_manager.models.keys()
             ]
@@ -284,6 +286,7 @@ class ChatCompletionServer:
         @app.get("/v1/models/{model}", response_model_exclude_none=True)
         @app.get("/models/{model}", response_model_exclude_none=True)
         def retrieve_model(model: str) -> Model | None:
+            """Return a `Model`, if its ID is found."""
             if model in self.model_manager.models:
                 return create_model_metadata(model)
             return None

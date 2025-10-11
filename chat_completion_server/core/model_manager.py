@@ -20,7 +20,10 @@ class ModelManager:
         self.models[model.id] = model
 
     def apply_model_config(self, params: CompletionCreateParams) -> CompletionCreateParams:
-        """Apply model-specific configuration to request params."""
+        """
+        Apply model-specific configuration to request params.
+        Replace the `model` field with the predefined upstream model.
+        """
         model_id = params.get("model")
         if not model_id or model_id not in self.models:
             return params
