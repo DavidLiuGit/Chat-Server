@@ -19,7 +19,7 @@ from chat_completion_server.core.constants import (
     SSE_DONE_MESSAGE,
     STREAMING_HEADERS,
 )
-from chat_completion_server.core.handler import OpenAIProxyHandler, ProxyHandler
+from chat_completion_server.core.proxy_handler import OpenAIProxyHandler, ProxyHandler
 from chat_completion_server.core.logging import generate_request_id, set_request_id
 from chat_completion_server.core.model_manager import ModelManager
 from chat_completion_server.core.normalizer import normalize_chat_completion
@@ -65,7 +65,8 @@ class ChatCompletionServer:
     def __init__(
         self,
         config: ProxyConfig | None = None,
-        handler: ProxyHandler | None = None,
+        proxy_handler: ProxyHandler | None = None,
+        
         plugins: list[ProxyPlugin] | None = None,
         models: dict[str, ModelConfig] | None = None,
     ):
@@ -79,7 +80,7 @@ class ChatCompletionServer:
             models: Custom model configurations. Defaults to {}
         """
         self.config = config or ProxyConfig()
-        self.handler = handler or OpenAIProxyHandler(self.config)
+        self.proxy_handler = proxy_handler or OpenAIProxyHandler(self.config)
         self.plugins = (
             plugins
             if plugins is not None
@@ -127,7 +128,7 @@ class ChatCompletionServer:
                 params = await plugin.before_request(params)
 
             # Execute request
-            response = await self.handler.execute(params)
+            response = await self.proxy_handler.execute(params)
 
             # Normalize non-streaming responses
             if not params.get("stream") and isinstance(response, ChatCompletion):

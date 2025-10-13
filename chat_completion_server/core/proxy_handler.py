@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
-from typing import Any, Union
+from typing import Any
 
-from openai import AsyncOpenAI, AsyncStream
-from openai.types.chat import ChatCompletion, ChatCompletionChunk, CompletionCreateParams
+from openai import AsyncOpenAI
+from openai.types.chat import ChatCompletion, CompletionCreateParams
 from openai.lib.streaming.chat import AsyncChatCompletionStreamManager
 
 from chat_completion_server.models.config import ProxyConfig

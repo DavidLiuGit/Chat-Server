@@ -3,7 +3,7 @@ from unittest.mock import Mock
 from chat_completion_server.core.server import ChatCompletionServer
 from chat_completion_server.models.config import ProxyConfig
 from chat_completion_server.models.model import ModelConfig
-from chat_completion_server.core.handler import OpenAIProxyHandler
+from chat_completion_server.core.proxy_handler import OpenAIProxyHandler
 from chat_completion_server.plugins.guardrails import GuardrailsPlugin
 from chat_completion_server.plugins.logging import LoggingPlugin
 
@@ -13,7 +13,7 @@ def test_constructor_defaults():
     server = ChatCompletionServer()
 
     assert isinstance(server.config, ProxyConfig)
-    assert isinstance(server.handler, OpenAIProxyHandler)
+    assert isinstance(server.proxy_handler, OpenAIProxyHandler)
     assert len(server.plugins) == 2
     assert isinstance(server.plugins[0], GuardrailsPlugin)
     assert isinstance(server.plugins[1], LoggingPlugin)
@@ -26,15 +26,15 @@ def test_constructor_with_config():
     server = ChatCompletionServer(config=config)
 
     assert server.config == config
-    assert server.handler.config == config
+    assert server.proxy_handler.config == config
 
 
 def test_constructor_with_handler():
     """Test constructor with custom handler."""
     handler = Mock()
-    server = ChatCompletionServer(handler=handler)
+    server = ChatCompletionServer(proxy_handler=handler)
 
-    assert server.handler == handler
+    assert server.proxy_handler == handler
 
 
 def test_constructor_with_plugins():

@@ -99,7 +99,7 @@ async def test_run_on_error_hooks():
 async def test_process_request_non_streaming(mock_normalize, server, mock_response):
     """Test process_request for non-streaming response."""
     mock_normalize.return_value = mock_response
-    server.handler.execute = AsyncMock(return_value=mock_response)
+    server.proxy_handler.execute = AsyncMock(return_value=mock_response)
 
     params = {"model": "test", "messages": []}
     result = await server.process_request(params)
@@ -112,7 +112,7 @@ async def test_process_request_non_streaming(mock_normalize, server, mock_respon
 async def test_process_request_streaming(server):
     """Test process_request for streaming response."""
     mock_stream = Mock(spec=AsyncChatCompletionStreamManager)
-    server.handler.execute = AsyncMock(return_value=mock_stream)
+    server.proxy_handler.execute = AsyncMock(return_value=mock_stream)
 
     params = {"model": "test", "stream": True, "messages": []}
     result = await server.process_request(params)
@@ -124,7 +124,7 @@ async def test_process_request_streaming(server):
 async def test_process_request_with_error(server):
     """Test process_request handles handler errors."""
     error = Exception("handler error")
-    server.handler.execute = AsyncMock(side_effect=error)
+    server.proxy_handler.execute = AsyncMock(side_effect=error)
 
     params = {"model": "test", "messages": []}
 
@@ -138,7 +138,7 @@ async def test_process_request_calls_plugins(server, mock_response):
     plugin = Mock()
     plugin.before_request = AsyncMock(return_value={"model": "test"})
     server.plugins = [plugin]
-    server.handler.execute = AsyncMock(return_value=mock_response)
+    server.proxy_handler.execute = AsyncMock(return_value=mock_response)
 
     params = {"model": "test", "messages": []}
     await server.process_request(params)
