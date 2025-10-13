@@ -23,6 +23,7 @@ from chat_completion_server.core.proxy_handler import OpenAIProxyHandler, ProxyH
 from chat_completion_server.core.logging import generate_request_id, set_request_id
 from chat_completion_server.core.model_manager import ModelManager
 from chat_completion_server.core.normalizer import normalize_chat_completion
+from chat_completion_server.core.tool_use import ProxyToolClient
 from chat_completion_server.models.plugin import ProxyPlugin
 from chat_completion_server.models import create_model_metadata, ModelConfig
 from chat_completion_server.plugins.guardrails import GuardrailsPlugin
@@ -66,7 +67,7 @@ class ChatCompletionServer:
         self,
         config: ProxyConfig | None = None,
         proxy_handler: ProxyHandler | None = None,
-        
+        proxy_tool_client: ProxyToolClient | None = None,
         plugins: list[ProxyPlugin] | None = None,
         models: dict[str, ModelConfig] | None = None,
     ):
@@ -81,6 +82,7 @@ class ChatCompletionServer:
         """
         self.config = config or ProxyConfig()
         self.proxy_handler = proxy_handler or OpenAIProxyHandler(self.config)
+        self.proxy_tool_client = proxy_tool_client or ProxyToolClient(self.config)
         self.plugins = (
             plugins
             if plugins is not None
@@ -122,17 +124,32 @@ class ChatCompletionServer:
         try:
             # Apply model-specific configuration
             params = self.model_manager.apply_model_config(params)
+            copy = params.copy()
 
             # Synchronous before_request hooks (blocking)
             for plugin in self.plugins:
                 params = await plugin.before_request(params)
 
-            # Execute request
+            # Execute user request
             response = await self.proxy_handler.execute(params)
 
             # Normalize non-streaming responses
             if not params.get("stream") and isinstance(response, ChatCompletion):
                 response = normalize_chat_completion(response)
+                
+                # handle tool calls
+                # TODO integrate this better
+                if response.choices[0].finish_reason == "tool_use" and response.choices[0].message.tool_calls:
+                    for tool_call in response.choices[0].message.tool_calls:
+                        tool_msg = await self.proxy_tool_client.execute_tool(tool_call)
+                        logger.info(f"[proxy_tool_client.execute_tool] {tool_msg=}")
+                        messages = list(copy.get("messages", []))
+                        if not len(messages):
+                            logger.warning("No messages found in params")
+                        messages.append(tool_msg)
+                        params["messages"] = messages
+                        logger.info(f"[messages] {list(params.get('messages'))}")
+                    response = await self.proxy_handler.execute(params)
                 asyncio.create_task(self._run_after_request_hooks(params, response))
 
             return response

@@ -1,7 +1,7 @@
-import requests
-from typing import Dict, Any
+import httpx
+from typing import Any
 
-from openai.types.chat import ChatCompletionMessageToolCall
+from openai.types.chat import ChatCompletionMessageToolCallUnion, ChatCompletionToolMessageParam
 
 from chat_completion_server.models.config import ProxyConfig
 
@@ -15,9 +15,18 @@ class ProxyToolClient:
             "Authorization": f"Bearer {config.upstream_api_key}",
             "Content-Type": "application/json",
         }
+        self.client = httpx.AsyncClient()
 
-    def execute_tool(self, tool_call: ChatCompletionMessageToolCall) -> Dict[str, Any]:
+    async def execute_tool(
+        self, tool_call: ChatCompletionMessageToolCallUnion
+    ) -> ChatCompletionToolMessageParam:
         """Execute a tool call via the upstream proxy."""
-        response = requests.post(self.tool_exec_url, json=tool_call.model_dump(), headers=self.headers)
+        response = await self.client.post(
+            self.tool_exec_url, json=tool_call.model_dump(), headers=self.headers
+        )
         response.raise_for_status()
-        return response.json()
+        return ChatCompletionToolMessageParam(response.json())
+
+    async def close(self):
+        """Close the HTTP client."""
+        await self.client.aclose()
