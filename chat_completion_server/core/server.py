@@ -122,15 +122,21 @@ class ChatCompletionServer:
             Exception: Any error during processing
         """
         try:
+            # Ensure messages is a list to prevent iterator consumption issues
+            if "messages" in params:
+                params["messages"] = list(params["messages"])
+            
             # Apply model-specific configuration
             params = self.model_manager.apply_model_config(params)
-            copy = params.copy()
 
             # Synchronous before_request hooks (blocking)
             for plugin in self.plugins:
                 params = await plugin.before_request(params)
 
-            # Execute user request
+            # Capture messages for tool call handling
+            original_messages = list(params.get("messages", []))
+
+            # Execute initial user request
             response = await self.proxy_handler.execute(params)
 
             # Normalize non-streaming responses
@@ -143,13 +149,12 @@ class ChatCompletionServer:
                     for tool_call in response.choices[0].message.tool_calls:
                         tool_msg = await self.proxy_tool_client.execute_tool(tool_call)
                         logger.info(f"[proxy_tool_client.execute_tool] {tool_msg=}")
-                        messages = list(copy.get("messages", []))
-                        if not len(messages):
-                            logger.warning("No messages found in params")
-                        messages.append(tool_msg)
-                        params["messages"] = messages
+                        original_messages.append(ProxyToolClient.tool_call_to_msg(tool_call, ))
+                        original_messages.append(tool_msg)
+                        params["messages"] = original_messages
                         logger.info(f"[messages] {list(params.get('messages'))}")
                     response = await self.proxy_handler.execute(params)
+                    response = normalize_chat_completion(response)
                 asyncio.create_task(self._run_after_request_hooks(params, response))
 
             return response

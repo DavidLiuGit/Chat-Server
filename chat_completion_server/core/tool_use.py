@@ -1,7 +1,7 @@
 import httpx
 from typing import Any
 
-from openai.types.chat import ChatCompletionMessageToolCallUnion, ChatCompletionToolMessageParam
+from openai.types.chat import ChatCompletionMessageToolCallUnion, ChatCompletionToolMessageParam, ChatCompletionMessageParam, ChatCompletionAssistantMessageParam
 
 from chat_completion_server.models.config import ProxyConfig
 
@@ -30,3 +30,14 @@ class ProxyToolClient:
     async def close(self):
         """Close the HTTP client."""
         await self.client.aclose()
+
+    @staticmethod
+    def tool_call_to_msg(tool_call: ChatCompletionMessageToolCallUnion, content: str | None = None) -> ChatCompletionAssistantMessageParam:
+        """Convert a tool call to a message."""
+        return ChatCompletionAssistantMessageParam(
+            role="assistant",
+            content=content,
+            tool_calls=[tool_call],
+        )
+
+        
