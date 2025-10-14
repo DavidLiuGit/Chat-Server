@@ -17,7 +17,9 @@ class ProxyConfig(BaseSettings):
     )
     """Base URL of the upstream OpenAI-compatible API"""
 
-    upstream_api_key: str = Field(default="", )#validation_alias="OPENAI_API_KEY")
+    upstream_api_key: str = Field(
+        default="",
+    )  # validation_alias="OPENAI_API_KEY")
     """API key for upstream service authentication"""
 
     host: str = "0.0.0.0"
@@ -31,3 +33,9 @@ class ProxyConfig(BaseSettings):
 
     enable_telemetry: bool = False
     """Enable built-in telemetry plugin"""
+
+    tool_exec_path: str = "/mcp/tool/execute"
+    """Path on upstream server for tool execution"""
+    
+    proxy_timeout: float = 20.0
+    """Timeout (in seconds) for default client"""

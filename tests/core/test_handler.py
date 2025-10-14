@@ -4,7 +4,7 @@ from openai.types.chat import ChatCompletion, ChatCompletionMessage
 from openai.types.chat.chat_completion import Choice
 from openai.types.completion_usage import CompletionUsage
 
-from chat_completion_server.core.handler import OpenAIProxyHandler
+from chat_completion_server.core.proxy_handler import OpenAIProxyHandler
 from chat_completion_server.models.config import ProxyConfig
 
 
@@ -83,4 +83,4 @@ def test_handler_initialization() -> None:
     assert str(handler.client.base_url).startswith(
         "https://test.api.com/v1/"
     )  # client may append /
-    assert handler.client.timeout == 10.0
+    assert handler.client.timeout == config.proxy_timeout

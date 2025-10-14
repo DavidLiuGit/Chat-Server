@@ -36,7 +36,9 @@ def setup_logging():
     handler.setLevel(logging.INFO)
 
     # Create formatter with request ID
-    formatter = logging.Formatter("%(asctime)s - (%(name)s) - [%(levelname)s] - (%(request_id)s) - %(message)s")
+    formatter = logging.Formatter(
+        "%(asctime)s - [%(levelname)s] - (%(name)s) - (%(request_id)s) - %(message)s"
+    )
     handler.setFormatter(formatter)
 
     # Add request ID filter
@@ -44,7 +46,7 @@ def setup_logging():
 
     # Add handler to logger
     logger.addHandler(handler)
-    
+
     # optionally add file logging handler
     # if True:
     #     file_handler = logging.FileHandler("app.log")
