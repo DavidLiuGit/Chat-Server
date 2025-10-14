@@ -166,7 +166,7 @@ class ChatCompletionServer:
 
         messages = list(params.get("messages", []))
 
-        tool_round = 0
+        tool_round, tool_call_count = 0, 0
 
         # Handle tool calls
         while (
@@ -177,9 +177,9 @@ class ChatCompletionServer:
             tool_round += 1
             for tool_call in response.choices[0].message.tool_calls:
                 tool_msg = await self.proxy_tool_client.execute_tool(tool_call)
-                logger.info(f"[proxy_tool_client.execute_tool] {tool_msg=}")
                 messages.append(ProxyToolClient.tool_call_to_msg(tool_call))
                 messages.append(tool_msg)
+                tool_call_count += 1
 
             params["messages"] = messages
             response = await self.proxy_handler.execute_non_streaming(params)
@@ -188,6 +188,12 @@ class ChatCompletionServer:
             # TODO remove this after https://github.com/maximhq/bifrost/issues/617
             if response.choices[0].finish_reason == "tool_use":
                 response.choices[0].finish_reason = "tool_calls"
+
+        if tool_round >= MAX_TOOL_ROUNDS:
+            logger.warning(f"[ToolCalling] Max tool rounds reached: {MAX_TOOL_ROUNDS}")
+            response.choices[0].finish_reason = "length"
+        elif tool_round > 0:
+            logger.info(f"[ToolCalling] Tool rounds: {tool_round}; tools called: {tool_call_count}")
 
         asyncio.create_task(self._run_after_request_hooks(params, response))
         return response

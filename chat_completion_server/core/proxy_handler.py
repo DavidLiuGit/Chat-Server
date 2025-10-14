@@ -70,6 +70,6 @@ class OpenAIProxyHandler(ProxyHandler):
 
     async def execute_non_streaming(self, params: CompletionCreateParams) -> ChatCompletion:
         """Execute a non-streaming request."""
-        return await self.client.chat.completions.create(
+        return await self.high_timeout_client.chat.completions.create(
             **params  # pyright: ignore[reportCallIssue,  reportArgumentType]
         )

@@ -41,7 +41,7 @@ async def test_execute_non_streaming(
     handler: OpenAIProxyHandler, mock_completion: ChatCompletion
 ) -> None:
     with patch.object(
-        handler.client.chat.completions, "create", new_callable=AsyncMock
+        handler.high_timeout_client.chat.completions, "create", new_callable=AsyncMock
     ) as mock_create:
         mock_create.return_value = mock_completion
 
