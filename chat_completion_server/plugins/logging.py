@@ -15,10 +15,40 @@ class LoggingPlugin(ProxyPlugin):
     async def before_request(
         self, params: CompletionCreateParams
     ) -> CompletionCreateParams:
-        model = params.get("model", "unknown")
-        stream = params.get("stream", False)
-        logger.info(f"Chat completion request: {params=}")
+        log_data = {
+            "model": params.get("model"),
+            "messages": params.get("messages"),
+        }
+        
+        if params.get("stream") is not None:
+            log_data["stream"] = params.get("stream")
+        
+        if params.get("max_completion_tokens") is not None:
+            log_data["max_completion_tokens"] = params.get("max_completion_tokens")
+        
+        messages = log_data.get("messages")
+        if messages and isinstance(messages, (list, tuple)) and len(messages) > 4:
+            messages = messages[-4:]
+            
+        if messages:
+            truncated_messages = []
+            for msg in messages:
+                if isinstance(msg, dict) and "content" in msg:
+                    truncated_msg = msg.copy()
+                    if isinstance(msg["content"], str):
+                        truncated_msg["content"] = self._truncate_message(msg["content"])
+                    truncated_messages.append(truncated_msg)
+                else:
+                    truncated_messages.append(msg)
+            log_data["messages"] = truncated_messages
+        
+        logger.info(f"Chat completion request: {log_data}")
         return params
+
+    def _truncate_message(self, msg: str, start_len: int = 64, end_len: int = 128) -> str:
+        if len(msg) <= start_len + end_len:
+            return msg
+        return f"{msg[:start_len]}...{msg[-end_len:]}"
 
     async def after_stream_async(
         self, params: CompletionCreateParams, response: ChatCompletion, events: list[ChatCompletionStreamEvent]
