@@ -13,7 +13,7 @@ authors = [
     {name = "DL", email = "v49t9zpqd@mozmail.com"}
 ]
 dependencies = [
-    "openai>=2.2.0",
+    "openai>=2.3.0",
     # "anthropic",
     "fastapi>=0.111.0",
     "uvicorn[standard]>=0.29.0",

@@ -68,10 +68,14 @@ class ModelManager:
             elif model.system_prompt_behavior == SystemPromptBehavior.OVERRIDE:
                 messages[system_msg_idx]["content"] = model.system_prompt
             elif model.system_prompt_behavior == SystemPromptBehavior.PREPEND:
-                existing = messages[system_msg_idx]["content"]
+                existing = messages[system_msg_idx][
+                    "content"
+                ]  # pyright: ignore[reportTypedDictNotRequiredAccess]
                 messages[system_msg_idx]["content"] = f"{model.system_prompt}\n\n{existing}"
             elif model.system_prompt_behavior == SystemPromptBehavior.APPEND:
-                existing = messages[system_msg_idx]["content"]
+                existing = messages[system_msg_idx][
+                    "content"
+                ]  # pyright: ignore[reportTypedDictNotRequiredAccess]
                 messages[system_msg_idx]["content"] = f"{existing}\n\n{model.system_prompt}"
         except Exception:
             logger.exception("[ModelManager] Error while applying ModelConfig.system_prompt")

@@ -32,6 +32,8 @@ from chat_completion_server.plugins.logging import LoggingPlugin
 
 logger = getLogger(__name__)
 
+MAX_TOOL_ROUNDS = 5
+
 
 class ChatCompletionServer:
     """
@@ -109,8 +111,7 @@ class ChatCompletionServer:
         Flow:
         1. Synchronous before_request hooks (blocking)
         2. Execute request via handler
-        3. Fire async hooks in background (non-blocking) - only for non-streaming
-        4. Return response immediately
+        3. Split into streaming/non-streaming processing
 
         Args:
             params: Chat completion parameters
@@ -125,7 +126,7 @@ class ChatCompletionServer:
             # Ensure messages is a list to prevent iterator consumption issues
             if "messages" in params:
                 params["messages"] = list(params["messages"])
-            
+
             # Apply model-specific configuration
             params = self.model_manager.apply_model_config(params)
 
@@ -133,36 +134,63 @@ class ChatCompletionServer:
             for plugin in self.plugins:
                 params = await plugin.before_request(params)
 
-            # Capture messages for tool call handling
-            original_messages = list(params.get("messages", []))
-
             # Execute initial user request
             response = await self.proxy_handler.execute(params)
 
-            # Normalize non-streaming responses
-            if not params.get("stream") and isinstance(response, ChatCompletion):
-                response = normalize_chat_completion(response)
-                
-                # handle tool calls
-                # TODO integrate this better
-                if response.choices[0].finish_reason == "tool_use" and response.choices[0].message.tool_calls:
-                    for tool_call in response.choices[0].message.tool_calls:
-                        tool_msg = await self.proxy_tool_client.execute_tool(tool_call)
-                        logger.info(f"[proxy_tool_client.execute_tool] {tool_msg=}")
-                        original_messages.append(ProxyToolClient.tool_call_to_msg(tool_call, ))
-                        original_messages.append(tool_msg)
-                        params["messages"] = original_messages
-                        logger.info(f"[messages] {list(params.get('messages'))}")
-                    response = await self.proxy_handler.execute(params)
-                    response = normalize_chat_completion(response)
-                asyncio.create_task(self._run_after_request_hooks(params, response))
-
-            return response
+            # Split processing based on streaming mode
+            if params.get("stream"):
+                return await self._process_streaming_response(params, response)
+            else:
+                return await self._process_non_streaming_response(params, response)
 
         except Exception as e:
             # Fire error hooks in background
             asyncio.create_task(self._run_on_error_hooks(params, e))
             raise
+
+    async def _process_streaming_response(
+        self, params: CompletionCreateParams, response: AsyncChatCompletionStreamManager[Any]
+    ) -> AsyncChatCompletionStreamManager[Any]:
+        """Process streaming response. Tool use support planned for future."""
+        return response
+
+    async def _process_non_streaming_response(
+        self, params: CompletionCreateParams, response: ChatCompletion
+    ) -> ChatCompletion:
+        """Process non-streaming response with tool use support."""
+        response = normalize_chat_completion(response)
+
+        # TODO remove this after https://github.com/maximhq/bifrost/issues/617
+        if response.choices[0].finish_reason == "tool_use":
+            response.choices[0].finish_reason = "tool_calls"
+
+        messages = list(params.get("messages", []))
+
+        tool_round = 0
+
+        # Handle tool calls
+        while (
+            response.choices[0].finish_reason == "tool_calls"
+            and response.choices[0].message.tool_calls
+            and tool_round < MAX_TOOL_ROUNDS
+        ):
+            tool_round += 1
+            for tool_call in response.choices[0].message.tool_calls:
+                tool_msg = await self.proxy_tool_client.execute_tool(tool_call)
+                logger.info(f"[proxy_tool_client.execute_tool] {tool_msg=}")
+                messages.append(ProxyToolClient.tool_call_to_msg(tool_call))
+                messages.append(tool_msg)
+
+            params["messages"] = messages
+            response = await self.proxy_handler.execute_non_streaming(params)
+            response = normalize_chat_completion(response)
+
+            # TODO remove this after https://github.com/maximhq/bifrost/issues/617
+            if response.choices[0].finish_reason == "tool_use":
+                response.choices[0].finish_reason = "tool_calls"
+
+        asyncio.create_task(self._run_after_request_hooks(params, response))
+        return response
 
     async def _run_after_request_hooks(
         self, params: CompletionCreateParams, response: ChatCompletion
