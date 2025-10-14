@@ -32,8 +32,12 @@ class ProxyHandler(ABC):
         Returns:
             ChatCompletion for non-streaming, AsyncStream[ChatCompletionChunk] for streaming
         """
-        pass
+        raise NotImplementedError("execute() shall be impl'd by child class")
 
+    @abstractmethod
+    async def execute_non_streaming(self, params: CompletionCreateParams) -> ChatCompletion:
+        """Execute a non-streaming request. Return `ChatCompletion`."""
+        raise NotImplementedError("execute_non_streaming() shall be impl'd by child class")
 
 class OpenAIProxyHandler(ProxyHandler):
     """Default handler that proxies to an OpenAI-compatible API."""
@@ -43,7 +47,12 @@ class OpenAIProxyHandler(ProxyHandler):
         self.client = AsyncOpenAI(
             base_url=config.upstream_url,
             api_key=config.upstream_api_key or "dummy",
-            timeout=10.0,  # in seconds
+            timeout=20.0,  # in seconds
+        )
+        self.high_timeout_client = AsyncOpenAI(
+            base_url=config.upstream_url,
+            api_key=config.upstream_api_key or "dummy",
+            timeout=60.0,  # in seconds
         )
 
     async def execute(
@@ -57,4 +66,10 @@ class OpenAIProxyHandler(ProxyHandler):
             return self.client.chat.completions.stream(**stream_params)  # type: ignore[return-value]
         else:
             # Use .create() for non-streaming requests
-            return await self.client.chat.completions.create(**params)  # type: ignore[return-value]
+            return await self.execute_non_streaming(params)
+
+    async def execute_non_streaming(self, params: CompletionCreateParams) -> ChatCompletion:
+        """Execute a non-streaming request."""
+        return await self.client.chat.completions.create(
+            **params  # pyright: ignore[reportCallIssue,  reportArgumentType]
+        )

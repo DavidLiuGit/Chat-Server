@@ -36,3 +36,6 @@ class ProxyConfig(BaseSettings):
 
     tool_exec_path: str = "/mcp/tool/execute"
     """Path on upstream server for tool execution"""
+    
+    proxy_timeout: float = 20.0
+    """Timeout (in seconds) for default client"""

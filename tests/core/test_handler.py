@@ -83,4 +83,4 @@ def test_handler_initialization() -> None:
     assert str(handler.client.base_url).startswith(
         "https://test.api.com/v1/"
     )  # client may append /
-    assert handler.client.timeout == 10.0
+    assert handler.client.timeout == config.proxy_timeout
