@@ -11,15 +11,10 @@ class ProxyConfig(BaseSettings):
         use_attribute_docstrings=True,
     )
 
-    upstream_url: str = Field(
-        default="https://api.openai.com/v1"
-        # default="https://api.openai.com/v1", validation_alias="OPENAI_API_URL"
-    )
+    upstream_url: str = "https://api.openai.com/v1"
     """Base URL of the upstream OpenAI-compatible API"""
 
-    upstream_api_key: str = Field(
-        default="",
-    )  # validation_alias="OPENAI_API_KEY")
+    upstream_api_key: str = "sk-1234"
     """API key for upstream service authentication"""
 
     host: str = "0.0.0.0"
